@@ -16,13 +16,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils; // 引入 StringUtils
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.access.AccessDeniedException;
 
 import jakarta.persistence.criteria.Join; // 确保是 jakarta.persistence.criteria.Join
 import jakarta.persistence.criteria.Predicate; // 确保是 jakarta.persistence.criteria.Predicate
 
 import java.time.LocalDateTime;
 import java.util.Collections; // 用于空集合
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -150,16 +151,15 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public Page<PostResponse> getAllPosts(Pageable pageable, PostStatus status) {
-        PostStatus queryStatus = (status == null) ? PostStatus.PUBLISHED : status;
         Page<Post> postsPage;
-        // 如果你的 PostRepository 中有 findByStatus(PostStatus status, Pageable pageable) 方法
-        postsPage = postRepository.findByStatus(queryStatus, pageable);
-        // 否则，如果你想查询所有状态（如果status为null），或者特定状态
-        // if (status == null) {
-        // postsPage = postRepository.findAll(pageable); // 这会获取所有状态的文章，可能不是期望的
-        // } else {
-        // postsPage = postRepository.findByStatus(status, pageable);
-        // }
+        if (status != null) {
+            postsPage = postRepository.findByStatus(status, pageable);
+        } else {
+            // 如果 status 为 null，则查询所有状态的文章 (后台管理常用)
+            // 注意：这个逻辑需要前端配合，前台请求必须明确传入 status=PUBLISHED
+            // 否则前台不传 status 也会拿到所有文章，可能不是期望的
+            postsPage = postRepository.findAll(pageable);
+        }
         return postsPage.map(this::convertToDto);
     }
 
@@ -230,7 +230,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostResponse updatePost(PostUpdateRequest request) {
+    public PostResponse updatePost(Long postId, PostUpdateRequest request, UserDetails currentUser) {
         if (request.getId() == null) {
             throw new IllegalArgumentException("要更新的文章ID不能为空");
         }

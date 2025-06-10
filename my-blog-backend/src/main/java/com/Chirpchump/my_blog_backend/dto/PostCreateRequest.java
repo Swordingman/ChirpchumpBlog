@@ -20,4 +20,6 @@ public class PostCreateRequest {
 
     private Set<Long> categoryIds;
     private Set<Long> tagIds;
+
+    private PostStatus status = PostStatus.DRAFT;
 }
