@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class AuthorDto {
-    private Long id; // 作者ID
-    private String username; // 作者用户名
+    private Long id;
+    private String username;
 }

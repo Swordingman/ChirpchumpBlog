@@ -37,7 +37,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { registerUser } from '@/api/authService'; // 引入新的API服务
+import { registerUser } from '@/api/authService';
 import { User, Message, Lock } from '@element-plus/icons-vue';
 
 const registerFormRef = ref(null);

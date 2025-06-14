@@ -26,12 +26,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
 
-        // 校验旧密码是否正确
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new BadCredentialsException("旧密码不正确");
         }
 
-        // 设置新密码
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }

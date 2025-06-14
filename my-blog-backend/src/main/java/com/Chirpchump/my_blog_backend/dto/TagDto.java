@@ -5,8 +5,8 @@ import lombok.Data;
 
 @Data
 public class TagDto {
-    private Long id; // 标签ID
+    private Long id;
     @NotBlank(message = "标签名称不能为空")
-    private String name; // 标签名称
+    private String name;
     private String slug;
 }

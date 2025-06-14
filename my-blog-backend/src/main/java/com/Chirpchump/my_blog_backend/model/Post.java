@@ -22,19 +22,19 @@ public class Post {
     @Column(nullable = false)
     private String title;
 
-    @Lob // 大文本字段
+    @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String contentMd; // Markdown原文
+    private String contentMd;
 
     @Lob
     @Column(columnDefinition = "TEXT")
-    private String contentHtml; // 渲染后的HTML (可选，可以前端渲染或后端渲染)
+    private String contentHtml;
 
     @Column(unique = true)
     private String slug;
 
-    @ManyToOne(fetch = FetchType.LAZY) // 多篇文章可以属于一个用户
-    @JoinColumn(name = "user_id") // 外键
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User author;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -49,7 +49,7 @@ public class Post {
             inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new HashSet<>();
 
-    @Enumerated(EnumType.STRING) // 枚举类型存储为字符串
+    @Enumerated(EnumType.STRING)
     private PostStatus status = PostStatus.DRAFT;
 
     private LocalDateTime publishedAt;
@@ -61,7 +61,7 @@ public class Post {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (this.slug == null || this.slug.isEmpty()) {
-            this.slug = title.toLowerCase().replace(" ", "-").replaceAll("[^a-z0-9-]", ""); // 简易 slug 生成
+            this.slug = title.toLowerCase().replace(" ", "-").replaceAll("[^a-z0-9-]", "");
         }
     }
 

@@ -37,7 +37,6 @@ public class PostServiceImpl implements PostService {
     private final Parser markdownParser;
     private final HtmlRenderer htmlRenderer;
 
-    // 确保所有依赖都已注入
     @Autowired
     public PostServiceImpl(PostRepository postRepository,
                            UserRepository userRepository,
@@ -52,13 +51,13 @@ public class PostServiceImpl implements PostService {
     }
 
     private String generateSlug(String title) {
-        if (!StringUtils.hasText(title)) { // 使用 StringUtils.hasText 进行更全面的空检查
-            return ""; // 或者抛出异常，如果标题是必需的
+        if (!StringUtils.hasText(title)) {
+            return "";
         }
         return title.toLowerCase()
                 .trim()
-                .replaceAll("\\s+", "-") // 将一个或多个空格替换为连字符
-                .replaceAll("[^a-z0-9\\-]", ""); // 移除非字母数字和连字符的字符
+                .replaceAll("\\s+", "-")
+                .replaceAll("[^a-z0-9\\-]", "");
     }
 
     private String convertMarkdownToHtml(String markdown) {
@@ -83,22 +82,17 @@ public class PostServiceImpl implements PostService {
         post.setContentMd(request.getContentMd());
         post.setContentHtml(convertMarkdownToHtml(request.getContentMd()));
 
-        // 处理 Slug
         if (StringUtils.hasText(request.getSlug())) {
             post.setSlug(generateSlug(request.getSlug()));
         } else {
             post.setSlug(generateSlug(request.getTitle()));
         }
-        // 确保生成的 slug 不为空，如果 title 和 request.slug 都为空或无效，可能会导致问题
         if (!StringUtils.hasText(post.getSlug())) {
-            // 可以设置一个默认slug或者抛出异常
-            // post.setSlug("untitled-post-" + System.currentTimeMillis());
             throw new IllegalArgumentException("文章标题和自定义Slug不能都为空或无效，无法生成Slug");
         }
 
         post.setAuthor(author);
 
-        // 处理分类关联
         if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
             Set<Category> categories = request.getCategoryIds().stream()
                     .map(id -> categoryRepository.findById(id)
@@ -106,10 +100,9 @@ public class PostServiceImpl implements PostService {
                     .collect(Collectors.toSet());
             post.setCategories(categories);
         } else {
-            post.setCategories(Collections.emptySet()); // 使用空集合而不是null
+            post.setCategories(Collections.emptySet());
         }
 
-        // 处理标签关联
         if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
             Set<Tag> tags = request.getTagIds().stream()
                     .map(id -> tagRepository.findById(id)
@@ -117,7 +110,7 @@ public class PostServiceImpl implements PostService {
                     .collect(Collectors.toSet());
             post.setTags(tags);
         } else {
-            post.setTags(Collections.emptySet()); // 使用空集合而不是null
+            post.setTags(Collections.emptySet());
         }
 
         post.setStatus(request.getStatus() != null ? request.getStatus() : PostStatus.DRAFT);
@@ -155,9 +148,6 @@ public class PostServiceImpl implements PostService {
         if (status != null) {
             postsPage = postRepository.findByStatus(status, pageable);
         } else {
-            // 如果 status 为 null，则查询所有状态的文章 (后台管理常用)
-            // 注意：这个逻辑需要前端配合，前台请求必须明确传入 status=PUBLISHED
-            // 否则前台不传 status 也会拿到所有文章，可能不是期望的
             postsPage = postRepository.findAll(pageable);
         }
         return postsPage.map(this::convertToDto);
@@ -174,25 +164,12 @@ public class PostServiceImpl implements PostService {
 
         PostStatus queryStatus = (status == null) ? PostStatus.PUBLISHED : status;
 
-        // 假设你已经在 PostRepository 中定义了按分类ID和状态查询的方法
-        // 例如: Page<Post> findByCategories_IdAndStatus(Long categoryId, PostStatus status, Pageable pageable);
-        // 或者 Page<Post> findByCategoriesContainingAndStatus(Category category, PostStatus status, Pageable pageable);
-        // 如果是按slug直接查，可能需要自定义@Query
-        // Page<Post> postsPage = postRepository.findByCategories_SlugAndStatus(categorySlug, queryStatus, pageable);
-
-        // 如果使用 Repository 中已有的方法，例如 (假设你创建了这样的方法):
-        // Page<Post> postsPage = postRepository.findByCategoryIdAndStatus(category.getId(), queryStatus, pageable);
-        // 或者，如果Repository方法是基于Category对象的:
-        // Page<Post> postsPage = postRepository.findByCategoriesContainingAndStatus(category, queryStatus, pageable);
-
-        // 使用Criteria API (如果Repository中没有现成方法)
-        // 注意: 确保 Post 实体中 categories 字段的 @ManyToMany 关联配置正确
         Page<Post> postsPage = postRepository.findAll((root, query, cb) -> {
             Join<Post, Category> categoryJoin = root.join("categories", jakarta.persistence.criteria.JoinType.INNER);
             Predicate categoryPredicate = cb.equal(categoryJoin.get("slug"), categorySlug);
             Predicate statusPredicate = cb.equal(root.get("status"), queryStatus);
             query.where(cb.and(categoryPredicate, statusPredicate));
-            query.distinct(true); // 多对多查询时建议去重
+            query.distinct(true);
             return query.getRestriction();
         }, pageable);
 
@@ -210,14 +187,8 @@ public class PostServiceImpl implements PostService {
 
         PostStatus queryStatus = (status == null) ? PostStatus.PUBLISHED : status;
 
-        // 类似于按分类查询，这里也需要 PostRepository 中有相应的方法
-        // 例如: Page<Post> findByTags_IdAndStatus(Long tagId, PostStatus status, Pageable pageable);
-        // 或者 Page<Post> findByTags_SlugAndStatus(String tagSlug, PostStatus status, Pageable pageable);
-        // Page<Post> postsPage = postRepository.findByTags_SlugAndStatus(tagSlug, queryStatus, pageable);
-
-        // 使用Criteria API (如果Repository中没有现成方法)
         Page<Post> postsPage = postRepository.findAll((root, query, cb) -> {
-            Join<Post, Tag> tagJoin = root.join("tags", jakarta.persistence.criteria.JoinType.INNER); // 确保 Post.tags 字段存在且关联正确
+            Join<Post, Tag> tagJoin = root.join("tags", jakarta.persistence.criteria.JoinType.INNER);
             Predicate tagPredicate = cb.equal(tagJoin.get("slug"), tagSlug);
             Predicate statusPredicate = cb.equal(root.get("status"), queryStatus);
             query.where(cb.and(tagPredicate, statusPredicate));
@@ -254,19 +225,16 @@ public class PostServiceImpl implements PostService {
 
         if (StringUtils.hasText(request.getSlug())) {
             post.setSlug(generateSlug(request.getSlug()));
-        } else if (!post.getTitle().equalsIgnoreCase(request.getTitle())) { // 如果标题变了，且没有提供新slug，则根据新标题生成
+        } else if (!post.getTitle().equalsIgnoreCase(request.getTitle())) {
             post.setSlug(generateSlug(request.getTitle()));
         }
-        // 再次确保slug不为空
         if (!StringUtils.hasText(post.getSlug())) {
             throw new IllegalArgumentException("文章标题和自定义Slug不能都为空或无效，无法生成Slug");
         }
 
-
-        // 更新分类关联
-        if (request.getCategoryIds() != null) { // 即使是空Set，也应该处理
+        if (request.getCategoryIds() != null) {
             if (request.getCategoryIds().isEmpty()) {
-                post.getCategories().clear(); // 如果传入空Set，则清空分类
+                post.getCategories().clear();
             } else {
                 Set<Category> categories = request.getCategoryIds().stream()
                         .map(id -> categoryRepository.findById(id)
@@ -274,12 +242,10 @@ public class PostServiceImpl implements PostService {
                         .collect(Collectors.toSet());
                 post.setCategories(categories);
             }
-        } // 如果 request.getCategoryIds() 为 null，则不修改分类
-
-        // 更新标签关联
-        if (request.getTagIds() != null) { // 即使是空Set，也应该处理
+        }
+        if (request.getTagIds() != null) {
             if (request.getTagIds().isEmpty()) {
-                post.getTags().clear(); // 如果传入空Set，则清空标签
+                post.getTags().clear();
             } else {
                 Set<Tag> tags = request.getTagIds().stream()
                         .map(id -> tagRepository.findById(id)
@@ -287,17 +253,16 @@ public class PostServiceImpl implements PostService {
                         .collect(Collectors.toSet());
                 post.setTags(tags);
             }
-        } // 如果 request.getTagIds() 为 null，则不修改标签
-
+        }
 
         PostStatus oldStatus = post.getStatus();
         PostStatus newStatus = request.getStatus();
 
-        if (newStatus != null) { // 只有当请求中明确给出了status才更新
+        if (newStatus != null) {
             post.setStatus(newStatus);
             if (oldStatus != PostStatus.PUBLISHED && newStatus == PostStatus.PUBLISHED) {
                 post.setPublishedAt(LocalDateTime.now());
-            } else if (newStatus != PostStatus.PUBLISHED && post.getPublishedAt() != null) { // 从已发布变为其他状态，且之前有发布时间
+            } else if (newStatus != PostStatus.PUBLISHED && post.getPublishedAt() != null) {
                 post.setPublishedAt(null);
             }
         }
@@ -309,7 +274,7 @@ public class PostServiceImpl implements PostService {
     @Transactional
     @Override
     public void deletePost(Long id) {
-        if (!postRepository.existsById(id)) { // 先检查是否存在
+        if (!postRepository.existsById(id)) {
             throw new ResourceNotFoundException("文章", "id", id);
         }
 
@@ -336,13 +301,12 @@ public class PostServiceImpl implements PostService {
         return posts.map(this::convertToDto);
     }
 
-    // 辅助方法：将Post实体转换为PostResponse DTO
     private PostResponse convertToDto(Post post) {
         if (post == null) return null;
         PostResponse postResponse = new PostResponse();
         postResponse.setId(post.getId());
         postResponse.setTitle(post.getTitle());
-        postResponse.setContentMd(post.getContentMd()); // 通常前端展示用 contentHtml
+        postResponse.setContentMd(post.getContentMd());
         postResponse.setContentHtml(post.getContentHtml());
         postResponse.setSlug(post.getSlug());
 

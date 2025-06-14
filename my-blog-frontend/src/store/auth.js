@@ -1,10 +1,9 @@
-// src/store/auth.js
 import { defineStore } from 'pinia'
 import {computed, ref} from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
-    const token = ref(localStorage.getItem('token') || null) // 从 localStorage 初始化 token
-    const user = ref(JSON.parse(localStorage.getItem('user')) || null) // 从 localStorage 初始化用户信息
+    const token = ref(localStorage.getItem('token') || null)
+    const user = ref(JSON.parse(localStorage.getItem('user')) || null)
 
     const isAuthenticated = computed(() => !!token.value);
     const isAdmin = computed(() => user.value?.role === 'ROLE_ADMIN');
@@ -33,7 +32,6 @@ export const useAuthStore = defineStore('auth', () => {
     function logout() {
         setToken(null)
         setUser(null)
-        // 可以在这里添加其他登出逻辑，例如跳转到登录页
         console.log('AuthStore: User logged out');
     }
 

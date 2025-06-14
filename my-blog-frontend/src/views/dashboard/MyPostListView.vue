@@ -7,8 +7,6 @@
           <el-button type="primary" :icon="Plus" @click="handleCreatePost">新建文章</el-button>
         </div>
       </template>
-
-      <!-- 搜索和筛选区域 (可选) -->
       <el-form :inline="true" :model="filters" @submit.prevent="loadPosts(1)" class="filter-form">
         <el-form-item label="标题">
           <el-input v-model="filters.title" placeholder="文章标题关键词" clearable />
@@ -94,7 +92,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchPosts, deletePostAdmin } from '@/api/postService.js' // 使用 admin 相关的 delete API
+import { fetchPosts, deletePostAdmin } from '@/api/postService.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { useAuthStore } from "@/store/auth.js";
@@ -110,7 +108,7 @@ const authStore = useAuthStore()
 
 const filters = reactive({
   title: '',
-  status: '', // '' 代表所有状态
+  status: '',
 })
 
 const router = useRouter()
@@ -121,13 +119,11 @@ const loadPosts = async (page = currentPage.value) => {
     const params = {
       page: page - 1,
       size: pageSize.value,
-      sort: 'updatedAt,desc', // 后台通常按更新时间排序
+      sort: 'updatedAt,desc',
       authorUsername: authStore.user?.username,
     }
-    // 如果后端API支持按标题搜索，可以添加
-    // if (filters.title) params.titleKeyword = filters.title;
 
-    const response = await fetchPosts(params) // 调用的是通用的 fetchPosts
+    const response = await fetchPosts(params)
     posts.value = response.content
     totalPages.value = response.totalPages
     totalElements.value = response.totalElements
@@ -142,7 +138,7 @@ const loadPosts = async (page = currentPage.value) => {
 
 const handleSizeChange = (newSize) => {
   pageSize.value = newSize
-  loadPosts(1) // 页大小改变，回到第一页
+  loadPosts(1)
 }
 
 const handlePageChange = (newPage) => {
@@ -159,9 +155,9 @@ const handleEditPost = (id) => {
 
 const handleDeletePost = async (id) => {
   try {
-    await deletePostAdmin(id) // 调用 admin 专用的删除 API
+    await deletePostAdmin(id)
     ElMessage.success('文章删除成功')
-    loadPosts() // 重新加载列表
+    loadPosts()
   } catch (err) {
     console.error('删除文章失败:', err)
     ElMessage.error(err.message || '删除文章失败')
@@ -209,7 +205,7 @@ onMounted(() => {
 .filter-form {
   margin-bottom: 20px;
 }
-.el-table .el-button + .el-button { /* 按钮之间加点间距 */
+.el-table .el-button + .el-button {
   margin-left: 8px;
 }
 </style>

@@ -1,4 +1,3 @@
-// src/views/ArchivesView.vue
 <template>
   <div class="archives-view">
     <h1>文章归档</h1>
@@ -36,10 +35,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { fetchArchives } from '@/api/postService' // 或 archiveService
+import { fetchArchives } from '@/api/postService'
 import { ElMessage } from 'element-plus'
 
-const archives = ref({}) // { 'year': { 'month': [posts] } }
+const archives = ref({})
 const loading = ref(true)
 const error = ref(null)
 
@@ -47,12 +46,8 @@ const loadArchives = async () => {
   loading.value = true
   error.value = null
   try {
-    // 后端返回的数据结构应该是 { "year": { "month": [posts] } }
-    // 需要确保后端API返回的 archives 对象是按年份（字符串键，降序）和月份（字符串键，降序）排序的
-    // 或者前端在这里进行排序
     const rawArchives = await fetchArchives();
 
-    // 如果需要前端排序 (后端没排好的话)
     const sortedYears = Object.keys(rawArchives).sort((a, b) => parseInt(b) - parseInt(a));
     const sortedArchives = {};
     for (const year of sortedYears) {
@@ -61,7 +56,6 @@ const loadArchives = async () => {
       sortedArchives[year] = {};
       for (const month of sortedMonths) {
         sortedArchives[year][month] = months[month];
-        // 可以对月份内的文章再按日期排序
         sortedArchives[year][month].sort((a,b) => new Date(b.publishedAt) - new Date(a.publishedAt));
       }
     }
@@ -77,7 +71,6 @@ const loadArchives = async () => {
 }
 
 const formatMonth = (monthStr) => {
-  // monthStr 可能是 "09", "10" 等
   return `${parseInt(monthStr, 10)}月`;
 }
 

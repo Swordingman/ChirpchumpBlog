@@ -16,14 +16,13 @@ import java.util.Date;
 public class JwtTokenProvider {
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
-    @Value("${app.jwtSecret}") // 从 application.properties 读取
+    @Value("${app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${app.jwtExpirationInMs}") // 从 application.properties 读取
+    @Value("${app.jwtExpirationInMs}")
     private int jwtExpirationInMs;
 
     private SecretKey getSigningKey() {
-        // 使用更安全的方式生成或存储密钥
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
@@ -39,7 +38,7 @@ public class JwtTokenProvider {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
-    // 可选：重载一个直接接收UserDetails的方法，用于手动创建用户后生成token
+
     public String generateTokenFromUserDetails(UserDetails userDetails) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
@@ -51,7 +50,6 @@ public class JwtTokenProvider {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
-
 
     public String getUsernameFromJWT(String token) {
         Claims claims = Jwts.parser()
@@ -74,7 +72,7 @@ public class JwtTokenProvider {
             logger.error("不支持的JWT token");
         } catch (IllegalArgumentException ex) {
             logger.error("JWT claims 字符串为空");
-        } // io.jsonwebtoken.security.SecurityException for signature issues
+        }
         catch (io.jsonwebtoken.security.SignatureException ex) {
             logger.error("JWT 签名验证失败");
         }

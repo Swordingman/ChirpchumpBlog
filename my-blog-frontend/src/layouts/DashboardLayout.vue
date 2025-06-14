@@ -1,9 +1,7 @@
 <template>
   <el-container class="dashboard-layout">
     <el-aside width="200px">
-      <!-- ... (Logo 部分) ... -->
       <el-menu :default-active="activeMenu" router>
-        <!-- 对所有登录用户可见的菜单 -->
         <el-menu-item index="/dashboard/my-posts">
           <el-icon><Tickets /></el-icon>
           <span>我的文章</span>
@@ -13,10 +11,8 @@
           <span>个人资料</span>
         </el-menu-item>
 
-        <!-- 分割线 -->
         <el-divider v-if="authStore.isAdmin" />
 
-        <!-- 仅限管理员可见的菜单 -->
         <div v-if="authStore.isAdmin">
           <div class="menu-title">管理员面板</div>
           <el-menu-item index="/dashboard/admin/all-posts">
@@ -35,9 +31,7 @@
       </el-menu>
     </el-aside>
     <el-container>
-      <!-- ... (Header 和 Main 部分，类似 AdminLayout) ... -->
       <el-header>
-        <!-- ... (右上角用户信息和退出) ... -->
       </el-header>
       <el-main>
         <router-view />

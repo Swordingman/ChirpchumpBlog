@@ -17,8 +17,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         System.out.println("--- WebConfig ---");
-        System.out.println("accessUrlPrefix: " + accessUrlPrefix); // 应该是 /uploads/
-        System.out.println("uploadDir: " + uploadDir); // 应该是 /var/www/my_blog_uploads/ 或 D:/.../
+        System.out.println("accessUrlPrefix: " + accessUrlPrefix);
+        System.out.println("uploadDir: " + uploadDir);
         System.out.println("Mapping " + accessUrlPrefix + "** to file:" + uploadDir);
 
         registry.addResourceHandler(accessUrlPrefix + "**")

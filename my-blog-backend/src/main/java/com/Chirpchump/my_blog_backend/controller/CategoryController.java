@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/admin/categories") // 使用 /admin 前缀以方便统一进行权限控制
+@RequestMapping("/api/v1/admin/categories")
 public class CategoryController {
 
     @Autowired

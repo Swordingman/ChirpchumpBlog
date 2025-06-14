@@ -1,4 +1,3 @@
-<!-- src/components/comments/CommentItem.vue -->
 <template>
   <div class="comment-item">
     <div class="comment-avatar">
@@ -54,7 +53,6 @@ import { likeComment, unlikeComment, deleteComment } from '@/api/commentService'
 import CommentForm from './CommentForm.vue';
 import { CaretTop } from '@element-plus/icons-vue';
 
-// 递归组件必须有一个 name
 defineOptions({ name: 'CommentItem' });
 
 const props = defineProps({
@@ -143,7 +141,7 @@ const formatDate = (dateString) => {
 }
 .comment-content {
   line-height: 1.6;
-  white-space: pre-wrap; /* 保留换行 */
+  white-space: pre-wrap;
 }
 .comment-actions {
   margin-top: 8px;
@@ -152,7 +150,7 @@ const formatDate = (dateString) => {
 }
 .reply-form {
   margin-top: 15px;
-  margin-left: -52px; /* 调整缩进以对齐 */
+  margin-left: -52px;
   padding-left: 52px;
 }
 .child-comments {

@@ -86,7 +86,7 @@ const loadPost = async (slug) => {
     error.value = err
     ElMessage.error(err.message || '获取文章详情失败')
     if (err.status === 404) {
-      // 可以跳转到404页面或显示特定信息
+
     }
   } finally {
     loading.value = false
@@ -103,7 +103,6 @@ const goBack = () => {
   router.push('/');
 }
 
-// 组件挂载时或路由参数变化时加载文章
 onMounted(() => {
   loadPost(route.params.slug)
 })
@@ -139,13 +138,12 @@ watch(() => route.params.slug, (newSlug) => {
 .category-link:hover, .tag-link:hover {
   text-decoration: underline;
 }
-/* 引入 Markdown 样式，例如 GitHub Markdown CSS */
-/* 或者使用 Element Plus 的排版样式 */
+
 .markdown-body {
   line-height: 1.7;
-  word-wrap: break-word; /* 确保长单词或链接能换行 */
+  word-wrap: break-word;
 }
-.markdown-body :deep(h1), /* 使用 :deep() 穿透 scoped CSS */
+.markdown-body :deep(h1),
 .markdown-body :deep(h2),
 .markdown-body :deep(h3),
 .markdown-body :deep(h4),
@@ -169,14 +167,14 @@ watch(() => route.params.slug, (newSlug) => {
   padding: 1.2em;
   margin: 1.5em 0;
 }
-.markdown-body :deep(code):not(pre > code) { /* 行内代码 */
+.markdown-body :deep(code):not(pre > code) {
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.9em;
 }
 .markdown-body :deep(img) {
-  max-width: 100%; /* 图片响应式 */
+  max-width: 100%;
   height: auto;
-  display: block; /* 避免图片下方有额外空隙 */
+  display: block;
   margin: 10px 0;
 }
 .markdown-body :deep(blockquote) {

@@ -19,20 +19,17 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
-    // 获取一篇文章的所有评论 (树状结构)
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<CommentResponse>> getCommentsByPost(@PathVariable Long postId) {
         return ResponseEntity.ok(commentService.getCommentsByPostId(postId));
     }
 
-    // 创建新评论
     @PostMapping
-    @PreAuthorize("isAuthenticated()") // 任何登录用户都可以评论
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CommentResponse> createComment(@Valid @RequestBody CommentRequest commentRequest) {
         return new ResponseEntity<>(commentService.createComment(commentRequest), HttpStatus.CREATED);
     }
 
-    // 删除评论 (权限在 Service 层判断)
     @DeleteMapping("/{commentId}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
@@ -40,7 +37,6 @@ public class CommentController {
         return ResponseEntity.noContent().build();
     }
 
-    // 点赞评论
     @PostMapping("/{commentId}/like")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> likeComment(@PathVariable Long commentId) {
@@ -48,7 +44,6 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
-    // 取消点赞
     @DeleteMapping("/{commentId}/like")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> unlikeComment(@PathVariable Long commentId) {

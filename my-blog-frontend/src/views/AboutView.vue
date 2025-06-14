@@ -27,7 +27,6 @@
 
 <script setup>
 import avatar from '@/assets/Chirpchump.png'
-// 通常不需要太多逻辑
 </script>
 
 <style scoped>

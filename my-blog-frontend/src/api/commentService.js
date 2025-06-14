@@ -1,4 +1,3 @@
-// src/api/commentService.js
 import apiClient from './axiosInstance';
 
 /**

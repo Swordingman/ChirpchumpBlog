@@ -1,4 +1,3 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import { useAuthStore } from "@/store/auth.js";
@@ -87,7 +86,7 @@ const routes = [
                 path: 'admin/all-posts',
                 name: 'AdminAllPosts',
                 component: () => import('../views/dashboard/admin/AllPostListView.vue'), // 管理员查看所有文章的列表
-                meta: { title: '文章管理', requiresAdmin: true } // 使用自定义 meta 字段来标记需要管理员权限
+                meta: { title: '文章管理', requiresAdmin: true }
             },
             {
                 path: 'admin/categories',
@@ -102,7 +101,7 @@ const routes = [
                 meta: { title: '标签管理', requiresAdmin: true }
             },
             {
-                path: 'admin/settings', // 设置页面通常也是管理员专属
+                path: 'admin/settings',
                 name: 'AdminSettings',
                 component: () => import('../views/dashboard/admin/SettingsView.vue'),
                 meta: { title: '系统设置', requiresAdmin: true }

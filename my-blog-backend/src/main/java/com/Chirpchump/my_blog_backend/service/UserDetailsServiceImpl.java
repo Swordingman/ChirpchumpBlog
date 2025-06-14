@@ -29,18 +29,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("用户未找到: " + username));
 
-        // 将用户的角色字符串 (如 "ROLE_ADMIN,ROLE_USER") 转换为 GrantedAuthority 集合
-        // 假设 User 实体中 role 字段存储的是单个角色字符串，如 "ROLE_ADMIN"
         Set<GrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority(user.getRole()));
-        // 如果 role 字段存储的是逗号分隔的多个角色，例如 "ROLE_ADMIN,ROLE_EDITOR"
-        // Set<GrantedAuthority> authorities = Stream.of(user.getRole().split(","))
-        //         .map(SimpleGrantedAuthority::new)
-        //         .collect(Collectors.toSet());
-
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
-                user.getPassword(), // 数据库中存储的已加密密码
+                user.getPassword(),
                 authorities);
     }
 }

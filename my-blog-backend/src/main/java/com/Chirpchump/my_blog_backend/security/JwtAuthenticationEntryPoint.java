@@ -20,7 +20,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          HttpServletResponse httpServletResponse,
                          AuthenticationException e) throws IOException, ServletException {
         logger.error("响应未授权错误. Message - {}", e.getMessage());
-        // 你可以自定义响应，例如返回 JSON
         httpServletResponse.setContentType("application/json");
         httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         httpServletResponse.getOutputStream().println("{ \"error\": \"Unauthorized\", \"message\": \"" + e.getMessage() + "\" }");

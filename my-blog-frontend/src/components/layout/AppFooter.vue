@@ -6,11 +6,9 @@
 </template>
 
 <script setup>
-// Footer 通常不需要太多逻辑
 </script>
 
 <style scoped>
 .app-footer-content {
-  /* 样式已在 App.vue 中定义 */
 }
 </style>

@@ -43,15 +43,12 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     public AuthController() {
-        // 在构造函数打断点，看Spring是否尝试创建这个Bean
-        // 或者在这里打印日志
         logger.info("AuthController Bean is being created!");
-        // System.out.println("AuthController Bean is being created!"); // 也可以用这个
     }
 
     @GetMapping("/hello")
     public String sayHello() {
-        logger.info("Accessing /hello endpoint. Active profiles: " + String.join(", ", environment.getActiveProfiles())); // 使用注入的Bean
+        logger.info("Accessing /hello endpoint. Active profiles: " + String.join(", ", environment.getActiveProfiles()));
         return "Hello from AuthController!";
     }
 
@@ -88,7 +85,6 @@ public class AuthController {
         String jwt = tokenProvider.generateToken(authentication);
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        // 你可以从 userDetails 中获取更多用户信息放入响应
         return ResponseEntity.ok(new LoginResponse(jwt, userDetails.getUsername(), userDetails.getAuthorities().stream().findFirst().orElse(null).getAuthority()));
     }
 }

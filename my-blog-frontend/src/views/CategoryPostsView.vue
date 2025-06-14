@@ -54,14 +54,14 @@ const totalPages = ref(0)
 const totalElements = ref(0)
 const pageSize = ref(10)
 const categorySlug = ref('')
-const currentCategoryName = ref(''); // 用于显示分类名称
+const currentCategoryName = ref('');
 
 const route = useRoute()
 const router = useRouter()
 
 const loadCategoryPosts = async (slug, page = 1) => {
   if (!slug) return;
-  categorySlug.value = slug; // 更新当前页面的 slug
+  categorySlug.value = slug;
   loading.value = true
   error.value = null
   try {
@@ -76,19 +76,16 @@ const loadCategoryPosts = async (slug, page = 1) => {
     totalPages.value = response.totalPages
     totalElements.value = response.totalElements
     currentPage.value = response.number + 1
-    // 假设文章数据中第一个文章的分类里有当前分类信息，以此获取分类名
-    // 更好的方式是单独请求分类详情API，或者API返回分类名
     if (response.content && response.content.length > 0) {
       const postWithCategory = response.content[0];
       const matchedCategory = postWithCategory.categories?.find(cat => cat.slug === slug);
       if (matchedCategory) {
         currentCategoryName.value = matchedCategory.name;
       } else {
-        currentCategoryName.value = slug; // Fallback to slug if name not found
+        currentCategoryName.value = slug;
       }
     } else {
-      // 如果没有文章，可能需要单独API获取分类名
-      currentCategoryName.value = slug; // Fallback
+      currentCategoryName.value = slug;
     }
 
   } catch (err) {
@@ -118,7 +115,7 @@ onMounted(() => {
 
 watch(() => route.params.categorySlug, (newSlug) => {
   if (newSlug && newSlug !== categorySlug.value) {
-    const pageFromQuery = parseInt(route.query.page) || 1; // 切换分类时，通常回到第一页
+    const pageFromQuery = parseInt(route.query.page) || 1;
     loadCategoryPosts(newSlug, pageFromQuery);
   }
 })

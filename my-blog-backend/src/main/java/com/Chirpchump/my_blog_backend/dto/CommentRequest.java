@@ -13,5 +13,5 @@ public class CommentRequest {
     private String content;
     @NotNull
     private Long postId;
-    private Long parentId; // 可选，如果是回复别人的评论
+    private Long parentId;
 }

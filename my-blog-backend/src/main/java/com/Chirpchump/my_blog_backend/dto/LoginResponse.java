@@ -11,7 +11,7 @@ public class LoginResponse {
     private String accessToken;
     private String tokenType = "Bearer";
     private String username;
-    private String role; // 或 Collection<String> roles
+    private String role;
 
     public LoginResponse(String accessToken, String username, String role) {
         this.accessToken = accessToken;

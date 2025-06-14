@@ -1,4 +1,3 @@
-// src/api/postService.js
 import apiClient from './axiosInstance'
 
 export const fetchPosts = (params) => { // params 可以是 { page, size, sort, status }

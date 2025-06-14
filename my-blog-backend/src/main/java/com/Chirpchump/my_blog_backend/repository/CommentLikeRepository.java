@@ -8,10 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> {
-
-    // 根据用户ID和评论ID查找点赞记录
     Optional<CommentLike> findByUserIdAndCommentId(Long userId, Long commentId);
-
-    // 根据评论ID删除所有点赞记录 (在删除评论时可能需要)
     void deleteByCommentId(Long commentId);
 }

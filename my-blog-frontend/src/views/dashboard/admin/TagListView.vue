@@ -24,7 +24,6 @@
       </el-table>
     </el-card>
 
-    <!-- 新建/编辑对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px" @close="handleCloseDialog">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="标签名称" prop="name">
@@ -84,11 +83,11 @@ const loadTags = async () => {
 };
 
 const handleOpenDialog = (row = null) => {
-  if (row) { // 编辑模式
+  if (row) {
     isEditMode.value = true;
     currentEditId.value = row.id;
     Object.assign(form, { name: row.name, slug: row.slug });
-  } else { // 新建模式
+  } else {
     isEditMode.value = false;
     currentEditId.value = null;
   }
@@ -96,9 +95,9 @@ const handleOpenDialog = (row = null) => {
 };
 
 const handleCloseDialog = () => {
-  if (formRef.value) { // 确保 formRef 存在
-    Object.assign(form, { name: '', slug: '' }); // 手动重置数据
-    formRef.value.clearValidate(); // 只清除校验状态
+  if (formRef.value) {
+    Object.assign(form, { name: '', slug: '' });
+    formRef.value.clearValidate();
   }
 };
 

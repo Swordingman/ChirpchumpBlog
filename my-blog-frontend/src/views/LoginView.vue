@@ -32,10 +32,7 @@ import { ref } from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/store/auth.js'
-import apiClient from '@/api/axiosInstance.js' // 引入axios实例
-
-// Element Plus 图标需要单独引入 (如果需要User和Lock图标)
-// import { User, Lock } from '@element-plus/icons-vue' // 如果你没有全局注册图标
+import apiClient from '@/api/axiosInstance.js'
 
 const loginFormRef = ref(null)
 const loginForm = ref({
@@ -59,28 +56,21 @@ const handleLogin = async (formEl) => {
       loading.value = true
       error.value = ''
       try {
-        // 直接使用 apiClient 发送请求
-        const response = await apiClient.post('/auth/login', { // 这里的路径相对于 baseURL ('/api/v1')
+        const response = await apiClient.post('/auth/login', {
           username: loginForm.value.username,
           password: loginForm.value.password
         })
-        // 假设后端成功登录后返回的数据在 response 中 (axiosInstance已处理了response.data)
-        // 例如 response = { accessToken: 'xxx', username: 'admin', role: 'ROLE_ADMIN' }
         authStore.setToken(response.accessToken)
-        authStore.setUser({ username: response.username, role: response.role }) // 存储用户信息
+        authStore.setUser({ username: response.username, role: response.role })
 
         ElMessage.success('登录成功！')
         if (route.query.redirect) {
           router.push(route.query.redirect);
         } else {
-          // 2. 如果没有 redirect 参数，则跳转到默认的仪表盘首页。
-          //    根据你的新路由，这个页面的名字是 'MyPosts'。
           router.push({ name: 'MyPosts' });
         }
       } catch (err) {
         console.error('登录失败:', err)
-        // err.message 是 axiosInstance 拦截器处理后返回的错误信息
-        // err.response?.data?.message 是原始后端返回的message
         error.value = err?.message || err?.response?.data?.message || '用户名或密码错误，请重试'
         ElMessage.error(error.value)
       } finally {
@@ -100,7 +90,7 @@ const handleLogin = async (formEl) => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f0f2f5; /* 可以设置一个背景色 */
+  background-color: #f0f2f5;
 }
 .login-card {
   width: 400px;

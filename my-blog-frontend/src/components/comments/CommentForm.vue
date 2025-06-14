@@ -48,7 +48,6 @@ const placeholderText = computed(() => {
 const handleSubmit = async () => {
   if (!authStore.isAuthenticated) {
     ElMessage.warning('请先登录！');
-    // 可以考虑跳转到登录页
     return;
   }
   if (!content.value.trim()) {
@@ -64,8 +63,8 @@ const handleSubmit = async () => {
       parentId: props.parentId,
     });
     ElMessage.success('评论成功！');
-    content.value = ''; // 清空输入框
-    emit('comment-submitted'); // 通知父组件评论已提交
+    content.value = '';
+    emit('comment-submitted');
   } catch (error) {
     console.error('评论失败:', error);
     ElMessage.error(error.message || '评论失败，请稍后重试。');

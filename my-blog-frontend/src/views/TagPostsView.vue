@@ -128,7 +128,6 @@ watch(() => route.query.page, (newPageQuery) => {
 </script>
 
 <style scoped>
-/* 样式与 CategoryPostsView 类似 */
 .tag-posts-view {
   padding: 20px;
   max-width: 900px;

@@ -1,4 +1,3 @@
-<!-- src/components/comments/CommentSection.vue -->
 <template>
   <div class="comment-section">
     <h3>{{ totalComments }} 条评论</h3>
@@ -59,7 +58,6 @@ const loadComments = async () => {
   error.value = null;
   try {
     const response = await fetchCommentsByPost(props.postId);
-    // 后端返回的数据中，子评论可能 postId 为 null，需要手动补上
     function addPostId(commentList, postId) {
       return commentList.map(c => {
         const newComment = { ...c, postId: postId };

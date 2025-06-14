@@ -4,28 +4,22 @@
     <p class="page-subtitle">探索、学习、分享</p>
 
     <el-row :gutter="30">
-      <!-- 主内容区域 -->
       <el-col :xs="24" :sm="24" :md="18">
-        <!-- 加载状态 -->
         <div v-if="loading">
           <el-card v-for="n in 3" :key="n" class="skeleton-card" shadow="never">
             <el-skeleton :rows="4" animated />
           </el-card>
         </div>
 
-        <!-- 错误状态 -->
         <div v-else-if="error" class="status-wrapper">
           <el-alert title="加载失败" type="error" :description="error.message || '请检查您的网络连接或稍后再试。'" show-icon :closable="false" />
         </div>
 
-        <!-- 内容显示 -->
         <div v-else>
-          <!-- 无文章状态 -->
           <div v-if="posts.length === 0" class="status-wrapper">
             <el-empty description="博主很懒，还没有留下任何足迹..." />
           </div>
 
-          <!-- 文章列表 -->
           <transition-group name="list-fade" tag="div">
             <el-card
                 v-for="post in posts"
@@ -37,7 +31,6 @@
               <template #header>
                 <div class="card-header">
                   <h2 class="post-title">
-                    <!-- 使用 @click.stop 防止事件冒泡到父级 card 的 click 事件 -->
                     <router-link :to="{ name: 'PostDetail', params: { slug: post.slug } }" @click.stop>
                       {{ post.title }}
                     </router-link>
@@ -65,7 +58,6 @@
                       effect="light"
                       round
                   >
-                    <!-- 同样使用 @click.stop -->
                     <router-link :to="{ name: 'CategoryPosts', params: { categorySlug: cat.slug } }" class="category-link" @click.stop>
                       {{ cat.name }}
                     </router-link>
@@ -75,7 +67,6 @@
             </el-card>
           </transition-group>
 
-          <!-- 分页 -->
           <div v-if="totalPages > 1" class="pagination-container">
             <el-pagination
                 background
@@ -89,7 +80,6 @@
         </div>
       </el-col>
 
-      <!-- 侧边栏 -->
       <el-col :xs="24" :sm="24" :md="6">
         <aside class="sidebar">
           <el-card class="sidebar-card" shadow="never">
@@ -100,7 +90,6 @@
               </div>
             </template>
             <ul class="category-list">
-              <!-- 这里应该是动态数据，暂时用静态示例 -->
               <li><a href="#">技术杂谈 (12)</a></li>
               <li><a href="#">Vue.js 深入 (8)</a></li>
               <li><a href="#">后端之旅 (5)</a></li>
@@ -115,7 +104,6 @@
               </div>
             </template>
             <div class="tag-cloud">
-              <!-- 标签云组件 -->
               <el-tag v-for="tag in ['Vue', 'Java', 'Spring Boot', 'Docker', 'Nginx', '生活', '随想']" :key="tag" effect="plain" round class="custom-tag">{{ tag }}</el-tag>
             </div>
           </el-card>
@@ -126,15 +114,12 @@
 </template>
 
 <script setup>
-// 1. 导入必要的模块和函数
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchPosts } from '@/api/postService'
-// 按需导入 Element Plus 组件和图标
 import { ElMessage, ElSkeleton, ElCard, ElTag, ElPagination, ElAlert, ElEmpty, ElRow, ElCol, ElIcon } from 'element-plus'
 import { User, Calendar, CollectionTag, PriceTag } from '@element-plus/icons-vue'
 
-// 2. 响应式状态 (与原版基本一致)
 const posts = ref([])
 const loading = ref(true)
 const error = ref(null)
@@ -143,11 +128,9 @@ const totalPages = ref(0)
 const totalElements = ref(0)
 const pageSize = ref(5)
 
-// 3. 路由实例
 const route = useRoute()
 const router = useRouter()
 
-// 4. 定义获取数据的函数 (与原版基本一致)
 const loadPosts = async (page = 1) => {
   loading.value = true
   error.value = null
@@ -172,17 +155,14 @@ const loadPosts = async (page = 1) => {
   }
 }
 
-// 5. 交互处理函数
 const handlePageChange = (newPage) => {
   router.push({ query: { ...route.query, page: newPage } })
 }
 
-// 新增：点击卡片跳转到详情页的函数
 const navigateToPost = (slug) => {
   router.push({ name: 'PostDetail', params: { slug } })
 }
 
-// 6. 辅助函数 (优化 getExcerpt)
 const formatDate = (dateString) => {
   if (!dateString) return '未知日期'
   return new Date(dateString).toLocaleDateString('zh-CN', {
@@ -192,29 +172,22 @@ const formatDate = (dateString) => {
   })
 }
 
-// 修复并优化摘要获取函数
 const getExcerpt = (htmlContent, maxLength = 150) => {
   if (!htmlContent) return '';
-  // 1. 创建一个临时的 div 元素
   const tempDiv = document.createElement('div');
-  // 2. 将 HTML 字符串放入其中
   tempDiv.innerHTML = htmlContent;
-  // 3. 获取纯文本内容
   const textContent = tempDiv.textContent || tempDiv.innerText || '';
-  // 4. 截取并添加省略号
   if (textContent.length <= maxLength) {
     return textContent;
   }
   return textContent.substring(0, maxLength).trim() + '...';
 }
 
-// 7. 生命周期钩子 (与原版一致)
 onMounted(() => {
   const pageFromQuery = parseInt(route.query.page) || 1
   loadPosts(pageFromQuery)
 })
 
-// 8. 侦听器 (与原版一致)
 watch(
     () => route.query.page,
     (newPageQuery) => {
@@ -227,14 +200,13 @@ watch(
 </script>
 
 <style scoped>
-/* Google Fonts - 可选，但能极大提升观感 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
 .home-view {
   padding: 20px;
   max-width: 1280px;
   margin: 0 auto;
-  font-family: 'Noto Sans SC', sans-serif; /* 应用字体 */
+  font-family: 'Noto Sans SC', sans-serif;
 }
 
 .page-title {
@@ -253,13 +225,11 @@ watch(
   margin-bottom: 40px;
 }
 
-/* 骨架屏卡片样式 */
 .skeleton-card {
   margin-bottom: 20px;
   border: 1px solid var(--el-card-border-color);
 }
 
-/* 状态容器（错误、空） */
 .status-wrapper {
   display: flex;
   justify-content: center;
@@ -269,13 +239,12 @@ watch(
   border-radius: 8px;
 }
 
-/* 文章卡片 */
 .post-card {
   margin-bottom: 25px;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 1px solid var(--el-card-border-color);
-  border-radius: 8px; /* 更圆润的边角 */
+  border-radius: 8px;
 }
 
 .post-card:hover {
@@ -339,16 +308,14 @@ watch(
   text-decoration: none;
 }
 
-/* 分页容器 */
 .pagination-container {
   display: flex;
   justify-content: center;
   margin-top: 40px;
 }
 
-/* 侧边栏 */
 .sidebar {
-  position: sticky; /* 粘性定位，滚动时保持在视图内 */
+  position: sticky;
   top: 20px;
 }
 .sidebar-card {
@@ -399,7 +366,6 @@ watch(
   color: var(--el-color-primary);
 }
 
-/* 列表过渡动画 */
 .list-fade-enter-active,
 .list-fade-leave-active {
   transition: all 0.5s ease;

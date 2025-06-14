@@ -9,10 +9,10 @@ import java.util.List;
 public class CommentResponse {
     private Long id;
     private String content;
-    private AuthorDto author; // 复用 AuthorDto
+    private AuthorDto author;
     private Long parentId;
-    private List<CommentResponse> children; // 嵌套的子评论
+    private List<CommentResponse> children;
     private Integer likeCount;
-    private boolean likedByCurrentUser; // 当前登录用户是否已点赞
+    private boolean likedByCurrentUser;
     private LocalDateTime createdAt;
 }

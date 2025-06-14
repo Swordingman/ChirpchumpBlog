@@ -28,7 +28,7 @@ const goHome = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 120px); /* 减去可能的header和footer高度 */
+  min-height: calc(100vh - 120px);
   padding: 20px;
 }
 </style>

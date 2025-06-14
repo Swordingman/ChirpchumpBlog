@@ -29,7 +29,6 @@
           </template>
           <p><strong>用户名:</strong> {{ authStore.user?.username }}</p>
           <p><strong>角色:</strong> {{ formatRole(authStore.user?.role) }}</p>
-          <!-- 可以添加邮箱等其他信息 -->
         </el-card>
       </el-col>
     </el-row>

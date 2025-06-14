@@ -49,8 +49,6 @@
               :loading="tagLoading"
               @change="handleTagChange"
           >
-            <!-- remote search + create new tag example -->
-            <!-- For simplicity now, just use existing tags, or create a simpler tag input -->
             <el-option
                 v-for="tag in availableTags"
                 :key="tag.id"
@@ -60,7 +58,6 @@
           </el-select>
           <div class="slug-tip">输入新标签名后按回车可创建。</div>
         </el-form-item>
-
 
         <el-form-item label="文章状态" prop="status">
           <el-radio-group v-model="postForm.status">
@@ -87,9 +84,8 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   createPostAdmin,
   updatePostAdmin,
-  fetchPostByIdAdmin // 用于编辑时获取文章详情
+  fetchPostByIdAdmin
 } from '@/api/postService.js'
-// 假设有获取分类和标签列表的 API
 import { ElMessage } from 'element-plus'
 import apiClient from '@/api/axiosInstance'
 
@@ -98,7 +94,7 @@ const router = useRouter()
 const postFormRef = ref(null)
 const mdEditor = ref(null)
 
-const postId = computed(() => route.params.id || null) // 从路由获取文章ID (编辑模式)
+const postId = computed(() => route.params.id || null)
 const isEditMode = computed(() => !!postId.value)
 
 const postForm = reactive({
@@ -108,7 +104,7 @@ const postForm = reactive({
   contentMd: '',
   categoryIds: [],
   tagIds: [],
-  status: 'DRAFT', // 默认状态
+  status: 'DRAFT',
 })
 
 const postRules = {
@@ -117,33 +113,25 @@ const postRules = {
   status: [{ required: true, message: '请选择文章状态', trigger: 'change' }],
 }
 
-const formLoading = ref(false)    // 加载表单数据 (编辑模式)
-const submitLoading = ref(false)  // 提交表单
+const formLoading = ref(false)
+const submitLoading = ref(false)
 const availableCategories = ref([])
 const availableTags = ref([])
 const tagLoading = ref(false)
 
-// 加载分类和标签数据 (用于下拉选择)
 const loadMeta = async () => {
   try {
-    // 假设这些API返回 {id, name} 列表
-    // availableCategories.value = await fetchAllCategoriesAdmin();
-    // availableTags.value = await fetchAllTagsAdmin();
-
-    // 模拟数据，你需要实现实际的API调用
     availableCategories.value = [
       { id: 1, name: '技术' }, { id: 2, name: '生活' }, { id: 3, name: '随笔' }
     ];
     availableTags.value = [
       { id: 1, name: 'Java' }, { id: 2, name: 'Spring Boot' }, { id: 3, name: 'Vue' }, { id: 4, name: '源码' }
     ];
-
   } catch (error) {
     ElMessage.error('加载分类或标签失败: ' + error.message)
   }
 }
 
-// 编辑模式下加载文章数据
 const loadPostData = async () => {
   if (!isEditMode.value) return
   formLoading.value = true
@@ -158,7 +146,7 @@ const loadPostData = async () => {
     postForm.tagIds = post.tags?.map(tag => tag.id) || []
   } catch (error) {
     ElMessage.error('加载文章数据失败: ' + error.message)
-    router.push({ name: 'AdminPosts' }) // 加载失败则返回列表页
+    router.push({ name: 'AdminPosts' })
   } finally {
     formLoading.value = false
   }
@@ -200,89 +188,53 @@ const handleSubmit = async (formEl) => {
 }
 
 const handleEditorImgAdd = async (pos, $file) => {
-  // pos: The position where the image is inserted in the editor.
-  // $file: The image File object.
-
-  // 1. 创建一个 FormData 对象来包装文件
   const formData = new FormData();
-  formData.append('image', $file); // 'image' 必须与后端 @RequestParam("image") 的名字匹配
+  formData.append('image', $file);
 
   try {
-    // 2. 显示加载状态（可选，但体验好）
-    // mdEditor.value?.$imgUpdateByUrl(pos, 'loading...'); // 用一个加载中的提示替换图片
-
-    // 3. 发送 POST 请求到后端上传接口
-    // 我们直接用 apiClient，因为它会自动附加 Token
     const response = await apiClient.post('/files/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data', // 告诉后端这是一个文件上传请求
+        'Content-Type': 'multipart/form-data',
       },
     });
 
-    // 4. 获取后端返回的图片 URL
-    // response 就是 { url: 'http://...' }
     const imageUrl = response.url;
-
-    // 5. 将图片插入到 mavon-editor 中
-    // $img2Url 会用 imageUrl 替换掉原来的 loading 提示或 base64 预览
     mdEditor.value?.$img2Url(pos, imageUrl);
 
   } catch (error) {
     console.error('图片上传失败:', error);
     ElMessage.error('图片上传失败: ' + (error.message || '请检查网络或联系管理员'));
-    // 如果上传失败，可以把占位的图片删除
     mdEditor.value?.$imgDelByFilename(pos);
   }
 };
 
-// [新增] 处理图片删除的函数 (可选)
 const handleEditorImgDel = (pos) => {
-  // pos[0] 是被删除图片的 URL
   console.log('删除图片:', pos[0]);
-  // 在这里，你可以向后端发送请求，删除服务器上对应的图片文件。
 }
 
-// 标签远程搜索和创建 (简化版，实际可能更复杂)
 const searchTags = async (query) => {
   if (query) {
     tagLoading.value = true;
-    // 模拟远程搜索，实际应调用API
-    // const results = await searchTagsAPI(query);
-    // availableTags.value = results; // 更新可选标签
-    // 这里简单地允许用户输入新标签，提交时后端处理创建逻辑
-    setTimeout(() => { // 模拟异步
+    setTimeout(() => {
       tagLoading.value = false;
-      // 如果后端支持在创建/更新文章时自动创建不存在的标签，这里不需要额外操作
-      // 否则，你可能需要一个专门的创建标签的逻辑
     }, 200);
-
   } else {
-    // availableTags.value = []; // 清空或加载默认标签
+    //
   }
 }
-// 当 el-select 的 allow-create 生效时，如果输入的值不在 options 中，
-// 且 filterable 为 true，select 的 v-model 会直接绑定这个输入的新值（字符串）。
-// 后端在处理 tagIds 时，需要判断是数字ID还是新的字符串标签名，然后进行创建。
+
 const handleTagChange = (selectedTagValues) => {
-  // selectedTagValues 是一个数组，可能包含数字 (已存在的tagId) 或字符串 (新创建的tag name)
-  // console.log('Selected tags:', selectedTagValues);
-  // 在提交时，后端需要处理这种情况，或者前端在提交前处理，将新标签名先创建并获取ID
-  // 为简单起见，我们假设后端能够处理 tagIds 中包含新标签名的情况。
-  // 如果后端不能处理，你需要在提交前：
-  // 1. 识别出新标签名
-  // 2. 调用 createTagAdmin API 创建这些新标签，获取它们的 ID
-  // 3. 将新标签的 ID 替换掉 postForm.tagIds 中的字符串名
+  //
 }
 
-
 const goBack = () => {
-  router.go(-1) // 返回上一页
+  router.go(-1)
 }
 
 onMounted(async () => {
-  await loadMeta(); // 先加载分类和标签
+  await loadMeta();
   if (isEditMode.value) {
-    await loadPostData(); // 如果是编辑模式，再加载文章数据
+    await loadPostData();
   }
 })
 </script>
@@ -296,8 +248,4 @@ onMounted(async () => {
   color: #909399;
   line-height: 1.2;
 }
-/* 如果使用 mavon-editor，可能需要调整其高度 */
-/* .mavon-editor {
-  min-height: 500px;
-} */
 </style>

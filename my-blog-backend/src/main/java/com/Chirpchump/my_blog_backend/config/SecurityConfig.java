@@ -58,39 +58,36 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler)) // 启用未授权处理器
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ======== 公开访问的API (Permit All) ========
-                        // 1. 登录接口
                         .requestMatchers("/api/v1/auth/**").permitAll()
-
-                        // 2. 前台获取公开内容的 GET 请求
-                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/tags/**").permitAll()
-                        .requestMatchers("/uploads/**").permitAll()
-                        // 如果有其他公开的GET接口，例如获取归档、关于信息等，也在这里配置
 
-                        // ======== 需要认证和权限的API ========
-                        // 1. 文章的写操作 (POST, PUT, DELETE)
+                        //文章
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/posts").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/posts/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/posts/**").authenticated()
+
+                        //改密码
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/change-password").authenticated()
+
+                        //上传
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/files/upload").authenticated()
 
+                        //评论
                         .requestMatchers(HttpMethod.GET, "/api/v1/posts/{postId}/comments").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/comments").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/comments/{commentId}").authenticated()
 
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                        // ======== 其他所有请求都需要认证 ========
                         .anyRequest().authenticated()
                 );
 
-        // 在 UsernamePasswordAuthenticationFilter 前添加 JWT 过滤器
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -99,19 +96,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 允许你的前端应用的源
         configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
-        // 允许所有常见的HTTP方法
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        // 允许所有常见的请求头
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
-        // 允许暴露的响应头
         configuration.setExposedHeaders(Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
-        // 允许发送凭证 (如 cookies)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // 对所有路径应用这个CORS配置
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
