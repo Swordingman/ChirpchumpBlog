@@ -150,28 +150,7 @@ const handleLogout = () => {
 // 缓存的视图 (可选，用于 <keep-alive>)
 const cachedViews = ref([]) // 例如 ['AdminPostList', 'AdminCategoryList'] 存储组件的 name
 
-// 路由定义示例 (src/router/index.js) 中 AdminLayout 的 children 需要有 name 和 meta.title
-// {
-//   path: '/admin',
-//   name: 'AdminLayout',
-//   component: () => import('../layouts/AdminLayout.vue'),
-//   meta: { requiresAuth: true, title: '后台管理' }, // 父级路由也可能有title
-//   children: [
-//     {
-//       path: '', // 注意这里是空路径，作为 AdminLayout 的默认子视图
-//       name: 'AdminDashboard',
-//       component: () => import('../views/admin/DashboardView.vue'),
-//       meta: { title: '仪表盘', icon: 'DataLine' } // icon 用于侧边栏 (可选)
-//     },
-//     {
-//       path: 'posts',
-//       name: 'AdminPosts',
-//       component: () => import('../views/admin/PostListView.vue'),
-//       meta: { title: '文章管理', icon: 'Tickets' }
-//     },
-//     // ...
-//   ]
-// }
+
 </script>
 
 <style lang="scss" scoped> // 使用 SCSS

@@ -1,4 +1,3 @@
-// src/views/admin/PostEditView.vue
 <template>
   <div class="post-edit-view">
     <el-card>
@@ -16,16 +15,14 @@
         </el-form-item>
 
         <el-form-item label="文章内容" prop="contentMd">
-          <!-- 这里集成 Markdown 编辑器，例如 mavon-editor 或 Vditor -->
-          <!-- 简单起见，先用 textarea 代替 -->
-          <el-input
+          <mavon-editor
               v-model="postForm.contentMd"
-              type="textarea"
-              :autosize="{ minRows: 15, maxRows: 30 }"
-              placeholder="请输入 Markdown 格式的文章内容"
+              ref="mdEditor"
+              language="zh-CN"
+              style="height: 600px"
+              @imgAdd="handleEditorImgAdd"
+              @imgDel="handleEditorImgDel"
           />
-          <!-- 推荐使用 mavon-editor: https://github.com/hinesboy/mavonEditor -->
-          <!-- <mavon-editor v-model="postForm.contentMd" language="zh-CN" /> -->
         </el-form-item>
 
         <el-form-item label="文章分类" prop="categoryIds">
@@ -91,17 +88,15 @@ import {
   createPostAdmin,
   updatePostAdmin,
   fetchPostByIdAdmin // 用于编辑时获取文章详情
-} from '@/api/postService'
+} from '@/api/postService.js'
 // 假设有获取分类和标签列表的 API
-import { fetchAllCategoriesAdmin, fetchAllTagsAdmin, createTagAdmin } from '@/api/metaService' // 需要创建 metaService.js
 import { ElMessage } from 'element-plus'
-// 如果使用 mavon-editor
-// import { mavonEditor } from 'mavon-editor'
-// import 'mavon-editor/dist/css/index.css'
+import apiClient from '@/api/axiosInstance'
 
 const route = useRoute()
 const router = useRouter()
 const postFormRef = ref(null)
+const mdEditor = ref(null)
 
 const postId = computed(() => route.params.id || null) // 从路由获取文章ID (编辑模式)
 const isEditMode = computed(() => !!postId.value)
@@ -190,7 +185,7 @@ const handleSubmit = async (formEl) => {
           await createPostAdmin(payload)
           ElMessage.success('文章创建成功！')
         }
-        router.push({ name: 'AdminPosts' }) // 成功后跳转回列表页
+        router.push({ name: 'Home' })
       } catch (error) {
         console.error('提交文章失败:', error)
         ElMessage.error(error.message || '操作失败，请重试')
@@ -202,6 +197,49 @@ const handleSubmit = async (formEl) => {
       return false
     }
   })
+}
+
+const handleEditorImgAdd = async (pos, $file) => {
+  // pos: The position where the image is inserted in the editor.
+  // $file: The image File object.
+
+  // 1. 创建一个 FormData 对象来包装文件
+  const formData = new FormData();
+  formData.append('image', $file); // 'image' 必须与后端 @RequestParam("image") 的名字匹配
+
+  try {
+    // 2. 显示加载状态（可选，但体验好）
+    // mdEditor.value?.$imgUpdateByUrl(pos, 'loading...'); // 用一个加载中的提示替换图片
+
+    // 3. 发送 POST 请求到后端上传接口
+    // 我们直接用 apiClient，因为它会自动附加 Token
+    const response = await apiClient.post('/files/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // 告诉后端这是一个文件上传请求
+      },
+    });
+
+    // 4. 获取后端返回的图片 URL
+    // response 就是 { url: 'http://...' }
+    const imageUrl = response.url;
+
+    // 5. 将图片插入到 mavon-editor 中
+    // $img2Url 会用 imageUrl 替换掉原来的 loading 提示或 base64 预览
+    mdEditor.value?.$img2Url(pos, imageUrl);
+
+  } catch (error) {
+    console.error('图片上传失败:', error);
+    ElMessage.error('图片上传失败: ' + (error.message || '请检查网络或联系管理员'));
+    // 如果上传失败，可以把占位的图片删除
+    mdEditor.value?.$imgDelByFilename(pos);
+  }
+};
+
+// [新增] 处理图片删除的函数 (可选)
+const handleEditorImgDel = (pos) => {
+  // pos[0] 是被删除图片的 URL
+  console.log('删除图片:', pos[0]);
+  // 在这里，你可以向后端发送请求，删除服务器上对应的图片文件。
 }
 
 // 标签远程搜索和创建 (简化版，实际可能更复杂)

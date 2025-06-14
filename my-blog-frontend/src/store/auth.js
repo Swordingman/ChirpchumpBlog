@@ -7,6 +7,7 @@ export const useAuthStore = defineStore('auth', () => {
     const user = ref(JSON.parse(localStorage.getItem('user')) || null) // 从 localStorage 初始化用户信息
 
     const isAuthenticated = computed(() => !!token.value);
+    const isAdmin = computed(() => user.value?.role === 'ROLE_ADMIN');
 
     function setToken(newToken) {
         token.value = newToken
@@ -36,5 +37,5 @@ export const useAuthStore = defineStore('auth', () => {
         console.log('AuthStore: User logged out');
     }
 
-    return { token, user, setToken, setUser, logout, isAuthenticated }
+    return { token, user, setToken, setUser, logout, isAuthenticated, isAdmin }
 })

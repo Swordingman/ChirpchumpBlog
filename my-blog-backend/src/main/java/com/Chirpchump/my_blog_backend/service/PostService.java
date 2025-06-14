@@ -8,6 +8,7 @@ import com.Chirpchump.my_blog_backend.model.PostStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface PostService {
     PostResponse createPost(PostCreateRequest postCreateRequest);
@@ -16,6 +17,11 @@ public interface PostService {
     Page<PostResponse> getAllPosts(Pageable pageable, PostStatus status);
     Page<PostResponse> getPostsByCategorySlug(String slug, Pageable pageable, PostStatus status);
     Page<PostResponse> getPostsByTagSlug(String slug, Pageable pageable, PostStatus status);
-    PostResponse updatePost(Long postId, PostUpdateRequest postUpdateRequest, UserDetails currentUser);
-    void deletePost(Long id, UserDetails currentUser);
+    Page<PostResponse> findPostsByAuthor(String username, Pageable pageable);
+
+    @Transactional
+    PostResponse updatePost(PostUpdateRequest request);
+
+    @Transactional
+    void deletePost(Long id);
 }

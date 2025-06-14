@@ -29,10 +29,10 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { useAuthStore } from '@/store/auth'
-import apiClient from '@/api/axiosInstance' // 引入axios实例
+import { useAuthStore } from '@/store/auth.js'
+import apiClient from '@/api/axiosInstance.js' // 引入axios实例
 
 // Element Plus 图标需要单独引入 (如果需要User和Lock图标)
 // import { User, Lock } from '@element-plus/icons-vue' // 如果你没有全局注册图标
@@ -50,6 +50,7 @@ const loading = ref(false)
 const error = ref('')
 const router = useRouter()
 const authStore = useAuthStore()
+const route = useRoute()
 
 const handleLogin = async (formEl) => {
   if (!formEl) return
@@ -69,7 +70,13 @@ const handleLogin = async (formEl) => {
         authStore.setUser({ username: response.username, role: response.role }) // 存储用户信息
 
         ElMessage.success('登录成功！')
-        router.push({ name: 'AdminDashboard' }) // 跳转到后台首页
+        if (route.query.redirect) {
+          router.push(route.query.redirect);
+        } else {
+          // 2. 如果没有 redirect 参数，则跳转到默认的仪表盘首页。
+          //    根据你的新路由，这个页面的名字是 'MyPosts'。
+          router.push({ name: 'MyPosts' });
+        }
       } catch (err) {
         console.error('登录失败:', err)
         // err.message 是 axiosInstance 拦截器处理后返回的错误信息

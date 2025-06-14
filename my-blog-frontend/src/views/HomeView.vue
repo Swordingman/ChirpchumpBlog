@@ -1,67 +1,124 @@
 <template>
   <div class="home-view">
-    <h1>欢迎来到我的博客</h1>
-    <el-row :gutter="20">
-      <el-col :span="18">
-        <div v-if="loading" class="loading-spinner">
-          <el-skeleton :rows="5" animated />
-        </div>
-        <div v-else-if="error" class="error-message">
-          <el-alert title="加载失败" type="error" :description="error.message || '请稍后再试'" show-icon closable />
-        </div>
-        <div v-else>
-          <div v-if="posts.length === 0" class="no-posts">
-            <el-empty description="暂无文章" />
-          </div>
-          <article v-for="post in posts" :key="post.id" class="post-item">
-            <h2>
-              <router-link :to="{ name: 'PostDetail', params: { slug: post.slug } }">
-                {{ post.title }}
-              </router-link>
-            </h2>
-            <p class="post-meta">
-              <span>作者: {{ post.author?.username || '未知' }}</span> |
-              <span>发布于: {{ formatDate(post.publishedAt) }}</span>
-            </p>
-            <div v-if="post.categories && post.categories.length > 0" class="post-categories">
-              分类:
-              <el-tag
-                  v-for="cat in post.categories"
-                  :key="cat.id"
-                  type="success"
-                  size="small"
-                  effect="light"
-                  style="margin-right: 5px;"
-              >
-                <router-link :to="{ name: 'CategoryPosts', params: { categorySlug: cat.slug } }" class="category-link">
-                  {{ cat.name }}
-                </router-link>
-              </el-tag>
-            </div>
-            <!-- 可以选择性展示部分 Markdown 内容的 HTML 预览 -->
-            <div class="post-excerpt" v-html="post.contentHtml?.substring(0, 200) + '...'"></div>
-            <el-divider />
-          </article>
+    <h1 class="page-title">食草兽博客</h1>
+    <p class="page-subtitle">探索、学习、分享</p>
 
-          <el-pagination
-              v-if="totalPages > 1"
-              background
-              layout="prev, pager, next"
-              :total="totalElements"
-              :page-size="pageSize"
-              :current-page="currentPage"
-              @current-change="handlePageChange"
-              style="margin-top: 20px; text-align: center;"
-          />
+    <el-row :gutter="30">
+      <!-- 主内容区域 -->
+      <el-col :xs="24" :sm="24" :md="18">
+        <!-- 加载状态 -->
+        <div v-if="loading">
+          <el-card v-for="n in 3" :key="n" class="skeleton-card" shadow="never">
+            <el-skeleton :rows="4" animated />
+          </el-card>
+        </div>
+
+        <!-- 错误状态 -->
+        <div v-else-if="error" class="status-wrapper">
+          <el-alert title="加载失败" type="error" :description="error.message || '请检查您的网络连接或稍后再试。'" show-icon :closable="false" />
+        </div>
+
+        <!-- 内容显示 -->
+        <div v-else>
+          <!-- 无文章状态 -->
+          <div v-if="posts.length === 0" class="status-wrapper">
+            <el-empty description="博主很懒，还没有留下任何足迹..." />
+          </div>
+
+          <!-- 文章列表 -->
+          <transition-group name="list-fade" tag="div">
+            <el-card
+                v-for="post in posts"
+                :key="post.id"
+                class="post-card"
+                shadow="hover"
+                @click="navigateToPost(post.slug)"
+            >
+              <template #header>
+                <div class="card-header">
+                  <h2 class="post-title">
+                    <!-- 使用 @click.stop 防止事件冒泡到父级 card 的 click 事件 -->
+                    <router-link :to="{ name: 'PostDetail', params: { slug: post.slug } }" @click.stop>
+                      {{ post.title }}
+                    </router-link>
+                  </h2>
+                </div>
+              </template>
+
+              <p class="post-excerpt">{{ getExcerpt(post.contentHtml, 150) }}</p>
+
+              <footer class="card-footer">
+                <div class="post-meta">
+                  <span class="meta-item">
+                    <el-icon><User /></el-icon> {{ post.author?.username || '佚名' }}
+                  </span>
+                  <span class="meta-item">
+                    <el-icon><Calendar /></el-icon> {{ formatDate(post.publishedAt) }}
+                  </span>
+                </div>
+                <div v-if="post.categories && post.categories.length > 0" class="post-categories">
+                  <el-tag
+                      v-for="cat in post.categories"
+                      :key="cat.id"
+                      type="success"
+                      size="small"
+                      effect="light"
+                      round
+                  >
+                    <!-- 同样使用 @click.stop -->
+                    <router-link :to="{ name: 'CategoryPosts', params: { categorySlug: cat.slug } }" class="category-link" @click.stop>
+                      {{ cat.name }}
+                    </router-link>
+                  </el-tag>
+                </div>
+              </footer>
+            </el-card>
+          </transition-group>
+
+          <!-- 分页 -->
+          <div v-if="totalPages > 1" class="pagination-container">
+            <el-pagination
+                background
+                layout="prev, pager, next"
+                :total="totalElements"
+                :page-size="pageSize"
+                :current-page="currentPage"
+                @current-change="handlePageChange"
+            />
+          </div>
         </div>
       </el-col>
-      <el-col :span="6">
-        <!-- 侧边栏，可以放分类列表、标签云等 -->
+
+      <!-- 侧边栏 -->
+      <el-col :xs="24" :sm="24" :md="6">
         <aside class="sidebar">
-          <h3>分类</h3>
-          <!-- 分类列表组件 -->
-          <h3>标签</h3>
-          <!-- 标签云组件 -->
+          <el-card class="sidebar-card" shadow="never">
+            <template #header>
+              <div class="sidebar-header">
+                <el-icon><CollectionTag /></el-icon>
+                <span>文章分类</span>
+              </div>
+            </template>
+            <ul class="category-list">
+              <!-- 这里应该是动态数据，暂时用静态示例 -->
+              <li><a href="#">技术杂谈 (12)</a></li>
+              <li><a href="#">Vue.js 深入 (8)</a></li>
+              <li><a href="#">后端之旅 (5)</a></li>
+              <li><a href="#">生活随笔 (3)</a></li>
+            </ul>
+          </el-card>
+          <el-card class="sidebar-card" shadow="never">
+            <template #header>
+              <div class="sidebar-header">
+                <el-icon><PriceTag /></el-icon>
+                <span>热门标签</span>
+              </div>
+            </template>
+            <div class="tag-cloud">
+              <!-- 标签云组件 -->
+              <el-tag v-for="tag in ['Vue', 'Java', 'Spring Boot', 'Docker', 'Nginx', '生活', '随想']" :key="tag" effect="plain" round class="custom-tag">{{ tag }}</el-tag>
+            </div>
+          </el-card>
         </aside>
       </el-col>
     </el-row>
@@ -70,165 +127,286 @@
 
 <script setup>
 // 1. 导入必要的模块和函数
-import { ref, onMounted, watch } from 'vue' // 从 Vue 导入响应式 API 和生命周期钩子
-import { useRoute, useRouter } from 'vue-router' // 从 Vue Router 导入路由相关的 hooks
-import { fetchPosts } from '@/api/postService' // 导入我们封装的 API 请求函数
-import { ElMessage, ElSkeleton, ElCard, ElTag, ElPagination, ElAlert, ElEmpty } from 'element-plus' // 导入 Element Plus 组件
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { fetchPosts } from '@/api/postService'
+// 按需导入 Element Plus 组件和图标
+import { ElMessage, ElSkeleton, ElCard, ElTag, ElPagination, ElAlert, ElEmpty, ElRow, ElCol, ElIcon } from 'element-plus'
+import { User, Calendar, CollectionTag, PriceTag } from '@element-plus/icons-vue'
 
-// 2. 定义响应式状态 (Reactivity State)
-const posts = ref([]) // 用于存储文章列表，初始为空数组
-const loading = ref(true) // 加载状态，初始为 true
-const error = ref(null) // 错误状态，初始为 null (没有错误)
+// 2. 响应式状态 (与原版基本一致)
+const posts = ref([])
+const loading = ref(true)
+const error = ref(null)
+const currentPage = ref(1)
+const totalPages = ref(0)
+const totalElements = ref(0)
+const pageSize = ref(5)
 
-// 分页相关的响应式状态
-const currentPage = ref(1)    // 当前页码
-const totalPages = ref(0)     // 总页数
-const totalElements = ref(0)  // 总记录数
-const pageSize = ref(5)      // 每页显示数量 (可以和后端约定或从后端获取)
+// 3. 路由实例
+const route = useRoute()
+const router = useRouter()
 
-// 3. 获取路由实例 (Router Instance) 和当前路由信息 (Current Route)
-const route = useRoute()   // 相当于 Vue 2 中的 this.$route
-const router = useRouter() // 相当于 Vue 2 中的 this.$router
-
-// 4. 定义获取数据的函数
+// 4. 定义获取数据的函数 (与原版基本一致)
 const loadPosts = async (page = 1) => {
-  console.log(`尝试加载第 ${page} 页的文章...`)
-  loading.value = true // 开始加载，设置 loading 为 true
-  error.value = null   // 清除之前的错误
-
+  loading.value = true
+  error.value = null
   try {
-    // 准备API请求参数
     const params = {
-      page: page - 1, // 后端 API 分页通常从 0 开始
+      page: page - 1,
       size: pageSize.value,
-      status: 'PUBLISHED', // 只获取已发布的文章
-      sort: 'publishedAt,desc' // 按发布时间降序排序
+      status: 'PUBLISHED',
+      sort: 'publishedAt,desc'
     }
-
-    // 调用 API
-    const responseData = await fetchPosts(params) // fetchPosts 返回的是 response.data
-    console.log('API响应:', responseData)
-
-    // 更新状态
-    posts.value = responseData.content || [] // 更新文章列表
+    const responseData = await fetchPosts(params)
+    posts.value = responseData.content || []
     totalPages.value = responseData.totalPages || 0
     totalElements.value = responseData.totalElements || 0
-    currentPage.value = (responseData.number || 0) + 1 // 后端页码从0开始，前端显示从1开始
-
+    currentPage.value = (responseData.number || 0) + 1
   } catch (err) {
     console.error('加载文章列表失败:', err)
-    error.value = err // 设置错误状态
-    // 可以使用 Element Plus 的 Message 组件提示用户
-    ElMessage({
-      message: err.message || '获取文章数据失败，请稍后再试。',
-      type: 'error',
-    })
+    error.value = err
+    ElMessage.error(err.message || '获取文章数据失败，请稍后再试。')
   } finally {
-    loading.value = false // 加载结束，设置 loading 为 false
+    loading.value = false
   }
 }
 
-// 5. 定义处理分页变化的函数
+// 5. 交互处理函数
 const handlePageChange = (newPage) => {
-  console.log(`分页改变，跳转到第 ${newPage} 页`)
-  // 更新路由查询参数，而不是直接调用 loadPosts
-  // 这样可以利用浏览器历史记录，并且可以通过 URL 分享特定页
   router.push({ query: { ...route.query, page: newPage } })
 }
 
-// 6. 定义辅助函数 (Helper Functions)
+// 新增：点击卡片跳转到详情页的函数
+const navigateToPost = (slug) => {
+  router.push({ name: 'PostDetail', params: { slug } })
+}
+
+// 6. 辅助函数 (优化 getExcerpt)
 const formatDate = (dateString) => {
-  if (!dateString) return '日期未知'
-  const date = new Date(dateString)
-  // 可以使用更专业的日期格式化库如 date-fns 或 moment.js
-  return date.toLocaleDateString('zh-CN', {
+  if (!dateString) return '未知日期'
+  return new Date(dateString).toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   })
 }
 
-const getExcerpt = (htmlContent, maxLength = 200) => {
+// 修复并优化摘要获取函数
+const getExcerpt = (htmlContent, maxLength = 150) => {
   if (!htmlContent) return '';
-  // 简单地去除 HTML 标签并截取文本
-  const textContent = htmlContent.replace(/<[^>]+>/g, '');
+  // 1. 创建一个临时的 div 元素
+  const tempDiv = document.createElement('div');
+  // 2. 将 HTML 字符串放入其中
+  tempDiv.innerHTML = htmlContent;
+  // 3. 获取纯文本内容
+  const textContent = tempDiv.textContent || tempDiv.innerText || '';
+  // 4. 截取并添加省略号
   if (textContent.length <= maxLength) {
     return textContent;
   }
-  return textContent.substring(0, maxLength) + '...';
+  return textContent.substring(0, maxLength).trim() + '...';
 }
 
-
-// 7. 使用生命周期钩子 (Lifecycle Hooks)
+// 7. 生命周期钩子 (与原版一致)
 onMounted(() => {
-  // 组件挂载后，从路由查询参数获取页码并加载文章
   const pageFromQuery = parseInt(route.query.page) || 1
-  console.log(`组件挂载，从查询参数获取页码: ${pageFromQuery}`)
   loadPosts(pageFromQuery)
 })
 
-// 8. 使用侦听器 (Watchers)
-// 侦听路由查询参数 'page' 的变化
-// 当用户通过浏览器前进/后退按钮改变URL中的page参数时，这个侦听器会被触发
+// 8. 侦听器 (与原版一致)
 watch(
     () => route.query.page,
     (newPageQuery) => {
       const newPageNum = parseInt(newPageQuery) || 1
-      console.log(`路由查询参数 page 变化为: ${newPageNum}`)
-      // 只有当计算出的页码与当前页码不同时才重新加载，避免不必要的请求
       if (newPageNum !== currentPage.value) {
         loadPosts(newPageNum)
       }
     }
 )
-
-// setup 函数会自动返回所有在顶层声明的 ref、reactive、computed、函数等
-// 所以不需要显式 return
 </script>
 
 <style scoped>
+/* Google Fonts - 可选，但能极大提升观感 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
 .home-view {
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
+  font-family: 'Noto Sans SC', sans-serif; /* 应用字体 */
 }
-.post-item {
-  margin-bottom: 30px;
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 10px;
+  color: var(--el-text-color-primary);
 }
-.post-item h2 a {
-  color: #303133;
+
+.page-subtitle {
+  font-size: 1.1rem;
+  font-weight: 300;
+  text-align: center;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 40px;
+}
+
+/* 骨架屏卡片样式 */
+.skeleton-card {
+  margin-bottom: 20px;
+  border: 1px solid var(--el-card-border-color);
+}
+
+/* 状态容器（错误、空） */
+.status-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background-color: var(--el-bg-color-page);
+  border-radius: 8px;
+}
+
+/* 文章卡片 */
+.post-card {
+  margin-bottom: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid var(--el-card-border-color);
+  border-radius: 8px; /* 更圆润的边角 */
+}
+
+.post-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.card-header .post-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.post-title a {
+  color: var(--el-text-color-primary);
   text-decoration: none;
   transition: color 0.3s;
 }
-.post-item h2 a:hover {
-  color: #409EFF;
+
+.post-title a:hover {
+  color: var(--el-color-primary);
 }
+
+.post-excerpt {
+  color: var(--el-text-color-regular);
+  line-height: 1.7;
+  font-size: 0.95rem;
+  margin: 16px 0;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
 .post-meta {
-  font-size: 0.9em;
-  color: #909399;
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 0.85rem;
+  color: var(--el-text-color-secondary);
 }
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .post-categories .el-tag {
-  cursor: pointer;
+  margin-left: 5px;
 }
+
 .category-link {
-  color: inherit; /* 继承el-tag的颜色 */
+  color: inherit;
   text-decoration: none;
 }
-.category-link:hover {
-  text-decoration: underline;
+
+/* 分页容器 */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
 }
-.post-excerpt {
-  color: #606266;
-  line-height: 1.6;
-}
-.loading-spinner, .error-message, .no-posts {
-  margin-top: 20px;
-  text-align: center;
-}
+
+/* 侧边栏 */
 .sidebar {
-  padding: 15px;
-  background-color: #f9f9f9;
+  position: sticky; /* 粘性定位，滚动时保持在视图内 */
+  top: 20px;
+}
+.sidebar-card {
+  margin-bottom: 20px;
+  border: 1px solid var(--el-card-border-color);
+  border-radius: 8px;
+}
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.category-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-list li a {
+  display: block;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: var(--el-text-color-regular);
   border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.category-list li a:hover {
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.custom-tag {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.custom-tag:hover {
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+/* 列表过渡动画 */
+.list-fade-enter-active,
+.list-fade-leave-active {
+  transition: all 0.5s ease;
+}
+.list-fade-enter-from,
+.list-fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>

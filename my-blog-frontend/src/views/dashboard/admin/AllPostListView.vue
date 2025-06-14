@@ -95,7 +95,7 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { fetchPosts, deletePostAdmin } from '@/api/postService' // 使用 admin 相关的 delete API
+import { fetchPosts, deletePostAdmin } from '@/api/postService.js' // 使用 admin 相关的 delete API
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 
@@ -149,11 +149,11 @@ const handlePageChange = (newPage) => {
 }
 
 const handleCreatePost = () => {
-  router.push({ name: 'AdminPostCreate' })
+  router.push({ name: 'PostCreate' })
 }
 
 const handleEditPost = (id) => {
-  router.push({ name: 'AdminPostEdit', params: { id } })
+  router.push({ name: 'PostEdit', params: { id } })
 }
 
 const handleDeletePost = async (id) => {

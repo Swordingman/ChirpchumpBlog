@@ -16,4 +16,5 @@ JpaSpecificationExecutor<Post> {
     Page<Post> findByAuthorIdAndStatus(Long authorId, PostStatus status, Pageable pageable);
     Page<Post> findByCategories_SlugAndStatus(String categorySlug, PostStatus status, Pageable pageable);
     Page<Post> findByTags_SlugAndStatus(String tagSlug, PostStatus status, Pageable pageable);
+    Page<Post> findByAuthor_Username(String username, Pageable pageable);
 }

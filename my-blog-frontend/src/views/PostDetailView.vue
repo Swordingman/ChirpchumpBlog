@@ -44,28 +44,32 @@
         </el-tag>
       </div>
       <el-divider />
-      <!-- 使用 v-html 渲染后端转换好的 HTML，注意 XSS 风险，确保 HTML 内容是可信的 -->
-      <div v-html="post.contentHtml" class="markdown-body"></div>
-      <!-- 如果需要代码高亮，需要引入高亮库如 highlight.js 或 prism.js，并应用样式 -->
-
-      <!-- 评论区 (未来实现) -->
-      <el-divider content-position="left">评论区</el-divider>
-      <div>评论功能待开发...</div>
+      <div v-html="renderedContent" class="markdown-body"></div>
+      <comment-section :post-id="post.id" />
     </article>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import {ref, onMounted, watch, computed} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchPostBySlug } from '@/api/postService'
 import { ElMessage } from 'element-plus'
+import { renderMarkdown } from "@/utils/markdown.js";
+import CommentSection from "@/components/comments/CommentSection.vue";
 
 const post = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const route = useRoute()
 const router = useRouter()
+
+const renderedContent = computed(() => {
+  if (post.value && post.value.contentMd) {
+    return renderMarkdown(post.value.contentMd);
+  }
+  return '';
+});
 
 const loadPost = async (slug) => {
   if (!slug) {
@@ -161,20 +165,13 @@ watch(() => route.params.slug, (newSlug) => {
   margin-bottom: 16px;
 }
 .markdown-body :deep(pre) {
-  padding: 16px;
-  overflow: auto;
-  font-size: 85%;
-  line-height: 1.45;
-  background-color: #f6f8fa;
-  border-radius: 3px;
-  margin-bottom: 16px;
+  border-radius: 6px;
+  padding: 1.2em;
+  margin: 1.5em 0;
 }
 .markdown-body :deep(code):not(pre > code) { /* 行内代码 */
-  padding: .2em .4em;
-  margin: 0;
-  font-size: 85%;
-  background-color: rgba(27,31,35,.05);
-  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
 }
 .markdown-body :deep(img) {
   max-width: 100%; /* 图片响应式 */

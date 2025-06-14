@@ -3,21 +3,21 @@ package com.Chirpchump.my_blog_backend.service;
 import com.Chirpchump.my_blog_backend.dto.*;
 import com.Chirpchump.my_blog_backend.exception.ResourceNotFoundException;
 import com.Chirpchump.my_blog_backend.model.*;
-import com.Chirpchump.my_blog_backend.repository.PostRepository;
-import com.Chirpchump.my_blog_backend.repository.UserRepository;
-import com.Chirpchump.my_blog_backend.repository.TagRepository;
-import com.Chirpchump.my_blog_backend.repository.CategoryRepository;
+import com.Chirpchump.my_blog_backend.repository.*;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils; // 引入 StringUtils
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import jakarta.persistence.criteria.Join; // 确保是 jakarta.persistence.criteria.Join
 import jakarta.persistence.criteria.Predicate; // 确保是 jakarta.persistence.criteria.Predicate
@@ -72,6 +72,12 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostResponse createPost(PostCreateRequest request) {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User author =
+                userRepository.findByUsername(currentUsername).orElseThrow(() ->
+                        new ResourceNotFoundException("用户", "username", currentUsername));
         Post post = new Post();
         post.setTitle(request.getTitle());
         post.setContentMd(request.getContentMd());
@@ -90,12 +96,6 @@ public class PostServiceImpl implements PostService {
             throw new IllegalArgumentException("文章标题和自定义Slug不能都为空或无效，无法生成Slug");
         }
 
-
-        // 设置作者
-        // !!! 重要: 确保ID为1L的用户存在于数据库中，否则这里会抛出ResourceNotFoundException
-        // 你应该先在数据库中手动插入一个用户，或者在程序启动时通过 CommandLineRunner 创建
-        User author = userRepository.findById(1L)
-                .orElseThrow(() -> new ResourceNotFoundException("用户", "id", 1L));
         post.setAuthor(author);
 
         // 处理分类关联
@@ -228,14 +228,25 @@ public class PostServiceImpl implements PostService {
         return postsPage.map(this::convertToDto);
     }
 
-    @Override
     @Transactional
-    public PostResponse updatePost(Long postId, PostUpdateRequest request, UserDetails currentUser) {
+    @Override
+    public PostResponse updatePost(PostUpdateRequest request) {
         if (request.getId() == null) {
             throw new IllegalArgumentException("要更新的文章ID不能为空");
         }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority ->
+                        grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+
         Post post = postRepository.findById(request.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("文章", "id", request.getId()));
+
+        if (!isAdmin && !post.getAuthor().getUsername().equals(currentUsername)) {
+            throw new AccessDeniedException("你没有权限修改此文章");
+        }
 
         post.setTitle(request.getTitle());
         post.setContentMd(request.getContentMd());
@@ -295,13 +306,34 @@ public class PostServiceImpl implements PostService {
         return convertToDto(updatedPost);
     }
 
-    @Override
     @Transactional
+    @Override
     public void deletePost(Long id) {
         if (!postRepository.existsById(id)) { // 先检查是否存在
             throw new ResourceNotFoundException("文章", "id", id);
         }
-        postRepository.deleteById(id); // 直接使用 deleteById，如果不存在会静默失败，所以先检查
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority ->
+                        grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("文章", "id", id));
+
+        if (!isAdmin && !post.getAuthor().getUsername().equals(currentUsername)) {
+            throw new AccessDeniedException("你没有权限删除此文章");
+        }
+
+        postRepository.delete(post);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> findPostsByAuthor(String username, Pageable pageable) {
+        Page<Post> posts = postRepository.findByAuthor_Username(username, pageable);
+        return posts.map(this::convertToDto);
     }
 
     // 辅助方法：将Post实体转换为PostResponse DTO

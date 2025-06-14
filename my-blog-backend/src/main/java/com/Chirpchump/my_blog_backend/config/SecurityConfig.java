@@ -69,17 +69,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/tags/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         // 如果有其他公开的GET接口，例如获取归档、关于信息等，也在这里配置
 
                         // ======== 需要认证和权限的API ========
                         // 1. 文章的写操作 (POST, PUT, DELETE)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/posts").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/posts/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/posts/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/posts").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/change-password").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/files/upload").authenticated()
 
-                        // 2. (示例) 分类和标签的管理接口
-                        .requestMatchers("/api/v1/admin/categories/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/admin/tags/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/{postId}/comments").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/comments").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/comments/{commentId}").authenticated()
+
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                         // ======== 其他所有请求都需要认证 ========
                         .anyRequest().authenticated()

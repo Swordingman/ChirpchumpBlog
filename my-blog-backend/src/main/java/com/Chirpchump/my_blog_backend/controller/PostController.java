@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 // import javax.validation.Valid; // Spring Boot 2.x
 
@@ -45,9 +46,17 @@ public class PostController {
     @GetMapping
     public ResponseEntity<Page<PostResponse>> getAllPosts(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(required = false) String authorUsername,
             // @PageableDefault 设置默认分页参数：每页10条，按创建时间降序排序
             @RequestParam(required = false) PostStatus status) { // status是可选参数
-        Page<PostResponse> posts = postService.getAllPosts(pageable, status);
+        Page<PostResponse> posts;
+        if (StringUtils.hasText(authorUsername)) {
+            // 如果提供了作者用户名，则按作者查询
+            posts = postService.findPostsByAuthor(authorUsername, pageable);
+        } else {
+            // 否则按原来的逻辑走
+            posts = postService.getAllPosts(pageable, status);
+        }
         return ResponseEntity.ok(posts); // 返回200 OK状态码和分页的文章数据
     }
 
@@ -93,25 +102,22 @@ public class PostController {
     // HTTP方法: PUT, 路径: /api/v1/posts/{id}
     @PutMapping("/{id}")
     public ResponseEntity<PostResponse> updatePost(@PathVariable Long id,
-                                                   @Valid @RequestBody PostUpdateRequest postUpdateRequest,
-                                                   @AuthenticationPrincipal UserDetails currentUser) {
+                                                   @Valid @RequestBody PostUpdateRequest postUpdateRequest) {
         // 实践中，你可能想确保路径中的id和请求体中的id一致
         if (postUpdateRequest.getId() == null) {
             postUpdateRequest.setId(id); // 如果请求体中没有id，使用路径中的
         } else if (!id.equals(postUpdateRequest.getId())) {
-            // 如果不一致，可以抛出异常或以一个为准，这里以路径中的id为准
-            // return new ResponseEntity<>("路径ID和请求体ID不匹配", HttpStatus.BAD_REQUEST);
             postUpdateRequest.setId(id);
         }
-        PostResponse updatedPost = postService.updatePost(id, postUpdateRequest, currentUser);
+        PostResponse updatedPost = postService.updatePost(postUpdateRequest);
         return ResponseEntity.ok(updatedPost);
     }
 
     // 删除指定ID的文章
     // HTTP方法: DELETE, 路径: /api/v1/posts/{id}
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id, @AuthenticationPrincipal UserDetails currentUser) {
-        postService.deletePost(id, currentUser);
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        postService.deletePost(id);
         return ResponseEntity.noContent().build(); // 返回204 No Content状态码，表示成功处理但无返回内容
     }
 }
