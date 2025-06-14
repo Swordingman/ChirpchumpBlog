@@ -1,4 +1,4 @@
-### **后端技术栈 (Backend)**
+**后端技术栈 (Backend)**
 
 *   **核心框架 (Core Framework)**:
     *   **Spring Boot**: 用于快速构建、配置和运行独立的、生产级的 Spring 应用程序。
@@ -20,7 +20,7 @@
 
 ---
 
-### **前端技术栈 (Frontend)**
+**前端技术栈 (Frontend)**
 
 *   **核心框架 (Core Framework)**:
     *   **Vue 3**: 渐进式 JavaScript 框架，使用了 **Composition API** (`<script setup>`) 进行开发。
@@ -43,7 +43,7 @@
 
 ---
 
-### **开发与部署 (Development & Deployment)**
+**开发与部署 (Development & Deployment)**
 
 *   **版本控制 (Version Control)**:
     *   **Git** & **GitHub / Gitee**: 用于代码的版本管理和托管。
